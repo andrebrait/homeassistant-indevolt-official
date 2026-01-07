@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
+from .utils import get_device_gen
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,15 +25,24 @@ async def async_setup_entry(
     """Set up switch entities from a config entry."""
     coordinator: IndevoltCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        [
-            GridChargingSwitch(coordinator, config_entry),
-        ]
-    )
+    # Add generation 1 entities
+    entities: list[IndevoltSwitchEntity] = []
+
+    # Add generation 2 entities (if applicable)
+    if get_device_gen(coordinator.config["device_model"]) != 1:
+        entities.extend(
+            [
+                GridChargingSwitch(coordinator, config_entry),
+            ]
+        )
+
+    async_add_entities(entities)
 
 
 class IndevoltSwitchEntity(CoordinatorEntity, SwitchEntity):
     """Base class for Indevolt switch entities."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: IndevoltCoordinator, config_entry: ConfigEntry) -> None:
         """Initialize the switch entity."""
