@@ -1,4 +1,4 @@
-"""Select platform for Indevolt integration."""
+"""Select platform for indevolt integration."""
 
 from __future__ import annotations
 
@@ -15,81 +15,84 @@ from .coordinator import IndevoltCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-# Mapping of integer values to display strings
-WORKING_MODE_OPTIONS = {
-    1: "Self-consumed prioritized",
-    2: "Charge/Discharge schedule",
-    3: "Real-time control",
+ENERGY_MODE_MAP = {
+    1: "Self-consumed Prioritized",
+    4: "Real-time Control",
+    5: "Charge/discharge Schedule",
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up select entities from a config entry."""
-    coordinator: IndevoltCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    """Set up the select platform for Indevolt.
 
-    async_add_entities(
-        [
-            WorkingModeSelect(coordinator, config_entry),
-        ]
-    )
+    This function is called by Home Assistant when the integration is set up.
+    It creates select entities for the Energy Mode.
+    """
+    coordinator: IndevoltCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    async_add_entities([IndevoltEnergyModeSelect(coordinator)])
 
 
-class IndevoltSelectEntity(CoordinatorEntity, SelectEntity):
-    """Base class for Indevolt select entities."""
+class IndevoltEnergyModeSelect(CoordinatorEntity[IndevoltCoordinator], SelectEntity):
+    """Select entity for Energy Mode selection."""
 
-    def __init__(self, coordinator: IndevoltCoordinator, config_entry: ConfigEntry) -> None:
-        """Initialize the select entity."""
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: IndevoltCoordinator) -> None:
+        """Initialize the Energy Mode select."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
-        self._attr_unique_id = f"{config_entry.entry_id}_{self._get_cjson_point()}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, config_entry.entry_id)},
-            "name": f"Indevolt {coordinator.config['device_model']}",
-        }
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_energy_mode"
+        self._attr_name = "Energy mode"
+        self._attr_options = list(ENERGY_MODE_MAP.values())
+        self._attr_device_info = coordinator.device_info
 
-    def _get_cjson_point(self) -> str:
-        """Get the cJson Point for this entity."""
-        raise NotImplementedError
+    @property
+    def current_option(self) -> str | None:
+        """Return the current selected option."""
+        if self.coordinator.data is None:
+            return None
 
-    def _get_command_value(self, value: str) -> list:
-        """Convert the selected value to the command format."""
-        raise NotImplementedError
+        mode_value = self.coordinator.data.get("7101")
+
+        if mode_value is None:
+            return None
+
+        # Convert to int if it's a string number
+        try:
+            mode_int = int(mode_value) if isinstance(mode_value, str) else mode_value
+        except (ValueError, TypeError):
+            _LOGGER.error("Invalid energy mode value: %s (type: %s)", mode_value, type(mode_value))
+            return None
+
+        option = ENERGY_MODE_MAP.get(mode_int)
+        if option is None:
+            _LOGGER.warning(
+                "Mode value %s not found in map. Valid values: %s",
+                mode_int,
+                list(ENERGY_MODE_MAP.keys()),
+            )
+
+        return option
 
     async def async_select_option(self, option: str) -> None:
-        """Update the selected option on the device."""
+        """Change the selected option."""
+        mode_value = next(
+            (key for key, value in ENERGY_MODE_MAP.items() if value == option),
+            None,
+        )
+
+        if mode_value is None:
+            _LOGGER.error("Invalid energy mode option: %s", option)
+            return
+
         try:
-            command_value = self._get_command_value(option)
-            await self.coordinator.async_push_data(self._get_cjson_point(), command_value)
-            self._attr_current_option = option
-            self.async_write_ha_state()
-        except Exception as err:
-            _LOGGER.error("Failed to set %s: %s", self.name, err)
+            await self.coordinator.async_push_data("47005", mode_value)
+            await self.coordinator.async_request_refresh()
+
+        except Exception:
+            _LOGGER.exception("Failed to set energy mode to %s", option)
             raise
-
-
-class WorkingModeSelect(IndevoltSelectEntity):
-    """Select entity for Working Mode."""
-
-    _attr_name = "Working Mode"
-    _attr_options = list(WORKING_MODE_OPTIONS.values())
-    _attr_icon = "mdi:cog"
-
-    def __init__(self, coordinator: IndevoltCoordinator, config_entry: ConfigEntry) -> None:
-        """Initialize the select entity."""
-        super().__init__(coordinator, config_entry)
-        self._attr_current_option = None
-
-    def _get_cjson_point(self) -> str:
-        """Get the cJson Point for Working Mode."""
-        return "47005"
-
-    def _get_command_value(self, value: str) -> list:
-        """Convert option string to integer command format."""
-        for key, option in WORKING_MODE_OPTIONS.items():
-            if option == value:
-                return [key]
-        return [1]

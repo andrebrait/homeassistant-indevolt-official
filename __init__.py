@@ -24,7 +24,7 @@ SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
