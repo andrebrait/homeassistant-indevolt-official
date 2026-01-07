@@ -186,13 +186,6 @@ SENSORS_GEN2: Final = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     IndevoltSensorEntityDescription(
-        key="6105",
-        name="Emergency power supply",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    IndevoltSensorEntityDescription(
         key="2101",
         name="Total AC Input Power",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -429,14 +422,13 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
 
-    # Create an entity for each sensor description.
     if get_device_gen(coordinator.config_entry.data.get("device_model")) == 1:
         for description in SENSORS_GEN1:
             entities.extend([IndevoltSensorEntity(coordinator=coordinator, description=description)])
     else:
         for description in SENSORS_GEN2:
             entities.extend([IndevoltSensorEntity(coordinator=coordinator, description=description)])
-    # Add all created entities to Home Assistant.
+
     async_add_entities(entities)
 
 
