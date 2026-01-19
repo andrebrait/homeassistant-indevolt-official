@@ -1,146 +1,170 @@
 # Indevolt integration for Home Assistant
 
-A Home Assistant custom integration to monitor and control [Indevolt](https://www.indevolt.com/) devices.
+The Indevolt integration enables direct local communication between Home Assistant and your [Indevolt](https://www.indevolt.com/) energy storage devices.
 
+## Use cases
+
+With this integration, you can monitor energy production and consumption as well as battery status, manage battery working modes and control real-time charging/discharging behavior, and configure power limits and other battery protection settings.
+
+## Supported devices
+
+The integration supports the following devices:
+
+- BK1600/BK1600Ultra
+- SolidFlex/PowerFlex2000
 
 ## Prerequisites
-- [ ] Home Assistant has been installed according to the [official installation guide](https://www.home-assistant.io/installation/).
-- [ ] The Indevolt device and Home Assistant server are on the **same local network**.
-- [ ] The Indevolt device is powered on and has obtained an **IP address**.
-  - Query via router’s management list;
-  - Check in INDEVOLT App device settings;
-  - Obtain IP via UDP broadcast:
-    1. Ensure the device's WiFi network and computer are on the same local area network.
-    2. Open a network debugging tool.
-    3. Select UDP protocol.
-    4. Select Local Host Addr.
-    5. Set Local Host Post to 10000.
-    6. Click Open.
-    7. Configure Remote with broadcast address and port: 255.255.255.255:8099.
-    8. Enter AT command in message box: AT+IGDEVICEIP.
-    9. Click Send.
-    10. INDEVOLT devices on the same network will respond with their IP address and serial number (SN).  
-    <img width="200" alt="1set_udp" src="https://github.com/user-attachments/assets/68674988-fc59-438e-b703-548eff6167d7" />
 
-    <img width="800" alt="2obtain_ip" src="https://github.com/user-attachments/assets/027b3e69-81b4-4894-bd7f-ca5b5b204ceb" />
+1. Connect your Indevolt device and Home Assistant to the same local network.
+2. Ensure the Indevolt device is powered on and has acquired a network IP address. You can get the IP from the app or from your router.
+3. Enable the device's API through the app.
 
-- [ ] Ensure that the Indevolt device **API function is enabled**. This integration only supports OpenData HTTP unencrypted mode.
-<img width="800" alt="3http_mode" src="https://github.com/user-attachments/assets/67f8ed96-abb8-4368-b3f3-b2a3484bd4b9" />
+## Installation
 
-- [ ] Confirm the firmware version meets the minimum requirement.
+1. Ensure Home Assistant is running and you have administrator access
+1. Open your Home Assistant configuration directory
+2. Create a custom_components/indevolt folder if it does not exist yet
+3. Copy the repository files into "custom_components/indevolt"
+4. Restart Home Assistant
+5. Add and configure the Indevolt integration if required
 
-  | Model                       | Version                         |
-  | --------------------------- | ------------------------------- |
-  | BK1600/BK1600Ultra          | V1.3.0A_R006.072_M4848_00000039 |
-  | SolidFlex2000/PowerFlex2000 | V1.3.09_R00D.012_M4801_00000015 |
+## Supported functionality
 
-<img width="400" alt="4fw_version" src="https://github.com/user-attachments/assets/7fb6d58f-9c95-4945-b588-810e68481f5b" />
+The Indevolt integration provides sensors for monitoring your device, as well as controls for managing battery operation.
 
+### Sensors
 
-## Step 1: Download the indevolt integration folder
+#### BK1600/BK1600Ultra (Generation 1)
 
-1. Click **Code** > **Download ZIP**.
-2. Unzip the ZIP file to your computer.
+- Serial number
+- Working mode
+- DC input power (2 channels, W)
+- Daily production (kWh)
+- Cumulative production (kWh)
+- Total AC input power (W)
+- Total AC input energy (kWh)
+- Total AC output power (W)
+- Total DC output power (W)
+- Battery power (W)
+- Battery charge/discharge state
+- Battery SOC (%)
+- Battery daily charging energy (kWh)
+- Battery daily discharging energy (kWh)
+- Battery total charging energy (kWh)
+- Battery total discharging energy (kWh)
+- Meter connection status
+- Meter power (W)
 
+#### SolidFlex2000/PowerFlex2000 (Generation 2)
 
-## Step 2: Locate the HA configuration directory path
+All Generation 1 sensors, plus:
 
-- **Home Assistant OS**: The configuration directory is located in `/config`.
-- **Home Assistant Container**: You can access the configuration directory by locating the `configuration.yaml` file.
+- Rated capacity (kWh)
+- DC input voltage (4 channels, V)
+- DC input current (4 channels, A)
+- DC input power (4 channels, W)
+- Grid voltage (V)
+- Grid frequency (Hz)
+- Bypass power (W)
+- Bypass input energy (Wh)
+- Off-grid output energy (kWh)
+- Total AC output energy (kWh)
+- Master serial number
+- Master SOC (%)
+- Master temperature (°C)
+- Master voltage (V)
+- Master current (A)
+- Battery pack 1-5 serial number
+- Battery pack 1-5 SOC (%)
+- Battery pack 1-5 temperature (°C)
+- Battery pack 1-5 voltage (V)
+- Battery pack 1-5 current (A)
 
-**Tip**: The directory should contain a `configuration.yaml` file.
+### Configurations (Generation 2 only)
 
+- Discharge limit: Set the minimum battery level (emergency power/SOC, %)
+- Max AC output power: Configure maximum discharge power (W)
+- Inverter input limit: Set maximum PV input power (W)
+- Feed-in power limit: Configure grid feed-in power limit (W)
+- Grid charging: Enable or disable charging from the grid (switch)
+
+### Actions
+
+#### Change battery working mode
+
+Change the working mode of your Indevolt device.
+
+```yaml
+action: indevolt.change_mode
+target:
+  device_id: YOUR_DEVICE_ID
+data:
+  mode: "self_consumed_prioritized"
 ```
-config directory/
-└── configuration.yaml
+
+Available modes:
+
+- `self_consumed_prioritized`: Prioritize self-consumption
+- `real_time_control`: Real-time control mode
+- `charge_discharge_schedule`: Schedule-based charging/discharging
+
+#### Charge battery (real-time mode)
+
+Configure the battery to start charging with specified power to the target SOC. The device will automatically switch to real-time control mode if needed.
+
+```yaml
+action: indevolt.charge
+target:
+  device_id: YOUR_DEVICE_ID
+data:
+  power: 1000
+  target_soc: 100
 ```
 
-## Step 3: Create a custom integration directory
+#### Discharge battery (real-time mode)
 
-1. Enter the config directory.
-2. Create the `custom_components` directory if it does not exist.
+Configure the battery to start discharging to power your home. The device will automatically switch to real-time control mode if needed.
 
-```
-config directory/
-├── custom_components/
-└── configuration.yaml
-```
-
-**Note**: All custom integrations must be placed under `custom_components`, otherwise HA will not be able to recognize them.
-
-
-## Step 4: Add the integration file
-
-1. Create the `indevolt` directory in the config directory.
-2. Copy all files from the unzipped folder (except `README.md`) into the `indevolt` directory.
-
-Once installed correctly, your configuration directory should look like this:
-
-```
-config directory/
-└── custom_components/
-    └── indevolt/
-        ├── __init__.py
-        ├── config_flow.py
-        ├── const.py
-        ├── coordinator.py
-        ├── entity.py
-        ├── manifest.json
-        ├── sensor.py
-        ├── indevolt.py
-        ├── strings.json
+```yaml
+action: indevolt.discharge
+target:
+  device_id: YOUR_DEVICE_ID
+data:
+  power: 800
 ```
 
-## Step 5: Restart Home Assistant
+#### Stop battery (real-time mode)
 
-1. Select **Settings** > **System** in the web interface.
-2. Click the restart icon in the upper right corner.
-3. Click **Restart Home Assistant**.
-4. Click **RESTART**.
+Put the battery into standby mode. The device will automatically switch to real-time control mode if needed.
 
-<img width="1000" alt="5restart_ha" src="https://github.com/user-attachments/assets/1270a590-faf8-43a4-8989-27923d1f3887" />
+```yaml
+action: indevolt.stop
+target:
+  device_id: YOUR_DEVICE_ID
+```
 
+## Data updates
 
-## Step 6: Add integration to Home Assistant
+The Indevolt integration automatically retrieves data from your devices by polling the OpenData API every 30 seconds. If an update fails, the integration will retry again at the set interval (self-recovery).
 
-1. After restarting, enter the web interface and select **Settings** > **Devices & services**.
-2. Click **+ADD INTEGRATION** in the lower right corner.
-3. Search for integration INDEVOLT.
-4. Configuration parameters:
-   - host: Device IP address, which can be obtained by checking the router/app.
-   - port: Default 8080.
-   - scan_interval: Used to control the frequency of data updates, default is 30 seconds.
-   - device_model: the model of your Indevolt device
-5. Click **SUBMIT** to finish the installation.
+## Known limitations
 
-<img width="600" alt="6add_integration" src="https://github.com/user-attachments/assets/b435073a-cd55-49fb-bcae-ffd698821c1a" />
-<img width="300" alt="7add_device" src="https://github.com/user-attachments/assets/ce18f3e0-9658-4052-bbbd-02dfea022dbb" />
+- Configuration controls (numbers and switches) are only available for Generation 2 devices (SolidFlex2000/PowerFlex2000).
+- Some sensors are device generation-specific and may not appear for all models.
+- Some sensors / configurations available in the app are not (yet) available in the integration.
+- During initialization (first minute) some sensor values might not yet shown / correct.
 
+## Troubleshooting
 
-## View Integration
+### Cannot add device or obtain data
 
-Select the INDEVOLT integration to display the device and entity information.
+1. Ensure the device is powered on and functioning normally.
+2. Confirm both the device and Home Assistant are connected to the same local network.
+3. Ensure the device's IP address is correct and hasn't changed.
+4. Check the device's settings in the Indevolt app to ensure that the API is enabled.
 
-<img width="800" alt="8view_integration" src="https://github.com/user-attachments/assets/731e767d-c41c-4c5e-b1f6-a6eae28fffd7" />
+Check the Home Assistant logs for more information.
 
+## Removing the integration
 
-
-## Update integration
-
-1. Download the latest version of the integration file.
-2. Replace the files in `custom_components/indevolt`.
-3. Restart Home Assistant.
-4. To ensure all new features are loaded, remove the device from Home Assistant and then re-add it.
-
-## FAQ
-
-| Problem Description | Solutions |
-| ------------------- | ----------|
-| Integration not found in search list | Verify the integration file is located in the correct folder: `custom_components/indevolt`. |
-| - Unable to add  device. <br> - Unable to connect to the device.  <br> - No data available   | This is typically caused by an **HTTP request failure**. <br>  1.  Verify the device is powered on.<br> 2. Confirm the device's IP address is correct.<br> 3. Check the device's network status in Indevolt app.<br>4. Ensure you have met all the [prerequisites](#prerequisites). |
-
-If you encounter any issues, please check the **Home Assistant logs** for detailed error messages.
-
-## Contribute
-
-We welcome your feedback and contributions! Please feel free to open an issue with your suggestions or submit a pull request.
+This integration follows standard integration removal.
