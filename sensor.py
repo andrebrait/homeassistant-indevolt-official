@@ -44,6 +44,7 @@ SENSORS: Final = (
     # System Operating Information
     IndevoltSensorEntityDescription(
         key="7101",
+        generation=[1],
         translation_key="working_mode",
         state_mapping={
             0: "outdoor_portable",
