@@ -264,6 +264,16 @@
         }
       }
     },
+    "select": {
+      "working_mode": {
+        "name": "Working mode",
+        "state": {
+          "self_consumed_prioritized": "Self-consumed prioritized",
+          "real_time_control": "Real-time control",
+          "charge_discharge_schedule": "Charge/discharge schedule"
+        }
+      }
+    },
     "switch": {
       "grid_charging": {
         "name": "Grid charging"
