@@ -43,6 +43,14 @@ class IndevoltSensorEntityDescription(SensorEntityDescription):
 SENSORS: Final = (
     # System Operating Information
     IndevoltSensorEntityDescription(
+        key="606",
+        translation_key="mode",
+        state_mapping={"1000": "master", "1001": "slave", "1002": "standalone"},
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    IndevoltSensorEntityDescription(
         key="7101",
         generation=[1],
         translation_key="working_mode",
