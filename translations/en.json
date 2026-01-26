@@ -283,8 +283,14 @@
       }
     },
     "switch": {
+      "bypass": {
+        "name": "Bypass"
+      },
       "grid_charging": {
         "name": "Grid charging"
+      },
+      "light": {
+        "name": "Led indicator"
       }
     }
   },

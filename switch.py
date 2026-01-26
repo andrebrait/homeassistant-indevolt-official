@@ -24,8 +24,8 @@ class IndevoltSwitchEntityDescription(SwitchEntityDescription):
 
     read_key: str
     write_key: str
-    on_value: int = 1001
-    off_value: int = 1000
+    on_value: int = 1
+    off_value: int = 0
     generation: list[int] = field(default_factory=lambda: [1, 2])
 
 
@@ -36,6 +36,22 @@ SWITCHES: Final = (
         generation=[2],
         read_key="2618",
         write_key="1143",
+        on_value = 1001,
+        off_value = 1000,
+    ),
+    IndevoltSwitchEntityDescription(
+        key="light",
+        translation_key="light",
+        generation=[2],
+        read_key="7171",
+        write_key="7265",
+    ),
+    IndevoltSwitchEntityDescription(
+        key="bypass",
+        translation_key="bypass",
+        generation=[2],
+        read_key="680",
+        write_key="7266",
     ),
 )
 
@@ -96,6 +112,13 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
 
         # If on_value is specified, check for exact match
         if self.entity_description.on_value is not None:
+            _LOGGER.warning(
+                "Comparing raw_value=%r (type=%s) with on_value=%r (type=%s)",
+                raw_value,
+                type(raw_value).__name__,
+                self.entity_description.on_value,
+                type(self.entity_description.on_value).__name__,
+            )
             return raw_value == self.entity_description.on_value
 
         # Otherwise, ON means anything except off_value
