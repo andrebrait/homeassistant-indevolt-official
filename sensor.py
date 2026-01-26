@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 import logging
-from typing import Final
+from typing import Final, Union
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,7 +36,7 @@ PARALLEL_UPDATES = 0
 class IndevoltSensorEntityDescription(SensorEntityDescription):
     """Custom entity description class for Indevolt sensors."""
 
-    state_mapping: dict[int, str] = field(default_factory=dict)
+    state_mapping: dict[Union[str, int], str] = field(default_factory=dict)
     generation: list[int] = field(default_factory=lambda: [1, 2])
 
 
