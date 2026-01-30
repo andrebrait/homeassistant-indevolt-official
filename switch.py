@@ -112,13 +112,6 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
 
         # If on_value is specified, check for exact match
         if self.entity_description.on_value is not None:
-            _LOGGER.warning(
-                "Comparing raw_value=%r (type=%s) with on_value=%r (type=%s)",
-                raw_value,
-                type(raw_value).__name__,
-                self.entity_description.on_value,
-                type(self.entity_description.on_value).__name__,
-            )
             return raw_value == self.entity_description.on_value
 
         # Otherwise, ON means anything except off_value
