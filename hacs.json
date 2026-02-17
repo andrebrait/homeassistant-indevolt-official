@@ -1,3 +1,6 @@
 {
-  "name": "Home Assistant Indevolt integration"
+	"name": "INDEVOLT",
+	"content_in_root": false,
+	"country": "NL",
+	"render_readme": true
 }
