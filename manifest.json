@@ -1,8 +1,10 @@
 {
   "domain": "indevolt",
   "name": "Indevolt",
-  "version": "1.0",
-  "codeowners": ["@xirtnl"],
+  "version": "1.0.0",
+  "codeowners": ["@xirtnl","@andrebrait"],
+  "documentation": "https://github.com/andrebrait/homeassistant-indevolt-official",
+  "issue_tracker": "https://github.com/andrebrait/homeassistant-indevolt-official/issues",
   "config_flow": true,
   "requirements": ["aiohttp"],
   "integration_type": "device",
