@@ -1,6 +1,6 @@
 {
   "domain": "indevolt",
-  "name": "Indevolt",
+  "name": "INDEVOLT",
   "version": "1.0.0",
   "codeowners": ["@xirtnl","@andrebrait"],
   "documentation": "https://github.com/andrebrait/homeassistant-indevolt-official",
