@@ -1,6 +1,7 @@
 {
 	"name": "INDEVOLT",
 	"content_in_root": false,
+	"domains": ["sensor"],
 	"country": "NL",
 	"render_readme": true
 }
